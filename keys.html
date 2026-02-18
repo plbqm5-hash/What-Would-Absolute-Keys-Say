@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What Would Absolute Keys Say?</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        #gameContainer {
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        #title {
+            color: #f5c542;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        #subtitle {
+            color: #aaa;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        #kiesContainer {
+            margin: 20px 0;
+        }
+        #keysCanvas {
+            max-width: 220px;
+        }
+        #prompt {
+            color: #fff;
+            font-size: 18px;
+            margin-bottom: 25px;
+            font-style: italic;
+        }
+        #score {
+            color: #0f0;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            font-family: 'Courier New', monospace;
+        }
+        .option-btn {
+            display: block;
+            width: 100%;
+            padding: 20px 25px;
+            margin: 12px 0;
+            font-size: 18px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid #f5c542;
+            border-radius: 12px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            line-height: 1.4;
+        }
+        .option-btn:hover {
+            background: rgba(245, 197, 66, 0.3);
+            transform: scale(1.02);
+        }
+        .option-btn.correct {
+            background: rgba(0, 255, 0, 0.3);
+            border-color: #0f0;
+        }
+        .option-btn.wrong {
+            background: rgba(255, 0, 0, 0.3);
+            border-color: #f00;
+        }
+        .option-btn:disabled {
+            cursor: not-allowed;
+            transform: none;
+        }
+        #gameOver {
+            display: none;
+            color: #fff;
+        }
+        #gameOver h2 {
+            color: #f55;
+            font-size: 32px;
+            margin-bottom: 15px;
+        }
+        #finalScore {
+            color: #f5c542;
+            font-size: 48px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        #restartBtn {
+            padding: 15px 40px;
+            font-size: 20px;
+            background: #f5c542;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        #restartBtn:hover {
+            background: #ffd700;
+        }
+        #leaderboard {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            background: rgba(0,0,0,0.8);
+            padding: 12px 15px;
+            border-radius: 10px;
+            border: 2px solid #f5c542;
+            color: #fff;
+            font-size: 12px;
+            min-width: 160px;
+            text-align: left;
+        }
+        #leaderboard h3 {
+            color: #f5c542;
+            margin-bottom: 8px;
+            font-size: 14px;
+            text-align: center;
+        }
+        #leaderboard ol {
+            padding-left: 20px;
+            margin: 0;
+        }
+        #leaderboard li {
+            margin: 4px 0;
+        }
+        .record-score {
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+        }
+        #nameModal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.95);
+            padding: 30px;
+            border-radius: 15px;
+            border: 3px solid #f5c542;
+            text-align: center;
+            z-index: 100;
+        }
+        #nameModal h2 {
+            color: #f5c542;
+            margin-bottom: 10px;
+        }
+        #nameModal p {
+            color: #0f0;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        #nameModal input {
+            padding: 10px 15px;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            width: 200px;
+            text-align: center;
+        }
+        #nameModal button {
+            padding: 10px 30px;
+            font-size: 18px;
+            background: #f5c542;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        @media (max-width: 500px) {
+            #leaderboard {
+                position: relative;
+                top: 0;
+                right: 0;
+                margin-bottom: 20px;
+            }
+            #title {
+                font-size: 22px;
+            }
+            .option-btn {
+                font-size: 16px;
+                padding: 15px 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="leaderboard">
+        <h3>LONGEST STREAKS</h3>
+        <ol id="leaderboardList">
+            <li style="color:#888">Loading...</li>
+        </ol>
+    </div>
+
+    <div id="gameContainer">
+        <div id="title">What Would Absolute Keys Say?</div>
+        <div id="subtitle">Pick the most ABSOLUTE statement</div>
+
+        <div id="keysContainer">
+            <canvas id="keysCanvas" width="240" height="230"></canvas>
+        </div>
+
+
+        <div id="score">Streak: 0</div>
+
+        <div id="gamePlay">
+            <button class="option-btn" id="option1"></button>
+            <button class="option-btn" id="option2"></button>
+        </div>
+
+        <div id="gameOver">
+            <h2>WRONG!</h2>
+            <p>Absolute Keys would NEVER say that mild nonsense.</p>
+            <div id="finalScore">0</div>
+            <p>streak</p>
+            <button id="restartBtn">TRY AGAIN</button>
+        </div>
+    </div>
+
+    <div id="nameModal">
+        <h2>NEW HIGH SCORE!</h2>
+        <p id="newScoreDisplay">0 streak</p>
+        <input type="text" id="playerName" placeholder="Enter your name" maxlength="12">
+        <br>
+        <button id="submitName">SUBMIT</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('keysCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Leaderboard
+        const JSONBIN_API_KEY = '$2a$10$bwd8sBLymHSBFJlo1gOqQ.ybCoTf2qCoIaK8dDl4bOWRupbufmyT2';
+        const JSONBIN_BIN_ID = '6995d87143b1c97be988d60f';
+        let leaderboard = [];
+
+        // Game state
+        let score = 0;
+        let currentQuestion = null;
+        let gameActive = true;
+        let keysMood = 'neutral'; // neutral, happy, angry
+        let frameCount = 0;
+
+        // Question pairs: [mild option, ABSOLUTE option]
+        const questions = [
+            ["That was a bad call by the refs", "Those are literally THE WORST REFS in the history of professional sports"],
+            ["I'm not a fan of that restaurant", "That place is absolutely DISGUSTING, worst food I've ever had in my entire life"],
+            ["The weather is kind of bad today", "This is the WORST weather this city has EVER seen, absolutely unbearable"],
+            ["That movie was disappointing", "That was hands down the WORST movie ever made, a complete disgrace to cinema"],
+            ["He's not the best player", "He is absolutely TERRIBLE, the worst player to ever step on that field"],
+            ["Traffic was pretty bad", "That was the WORST traffic jam in HISTORY, completely unacceptable"],
+            ["The service was slow", "That waiter was the MOST incompetent person I have EVER encountered"],
+            ["I don't love that song", "That is the WORST song ever recorded, an absolute assault on my ears"],
+            ["That's an expensive price", "That is highway ROBBERY, the most ridiculous price I've ever seen"],
+            ["The pizza was cold", "That was the WORST pizza in the ENTIRE WORLD, completely inedible garbage"],
+            ["He made a mistake", "That was the DUMBEST decision in the history of mankind"],
+            ["I'm a bit tired", "I am MORE exhausted than any human has EVER been"],
+            ["That test was hard", "That was the HARDEST test ever created, absolutely impossible"],
+            ["It's a little crowded", "This is the MOST packed place in the ENTIRE UNIVERSE"],
+            ["The line is long", "This is the LONGEST line that has ever existed in human history"],
+            ["My phone battery died", "This phone has the WORST battery life of ANY device ever manufactured"],
+            ["That joke wasn't funny", "That was the LEAST funny thing any person has EVER said"],
+            ["The hotel room was small", "That was the SMALLEST room in the history of hotels, basically a closet"],
+            ["I'm kind of hungry", "I am STARVING, more hungry than anyone has ever been"],
+            ["That team played poorly", "That was the WORST performance by any team in the history of sports"],
+            ["The coffee is bitter", "This is the WORST coffee ever made, absolutely undrinkable"],
+            ["It's a bit hot outside", "This is the HOTTEST day in recorded history, surface of the sun levels"],
+            ["That was a long meeting", "That was the LONGEST most POINTLESS meeting in corporate history"],
+            ["The Wi-Fi is slow", "This is the SLOWEST internet connection in the ENTIRE WORLD"],
+            ["He's kind of loud", "He is the LOUDEST most OBNOXIOUS person to ever exist"],
+            ["That's an old car", "That car is an ANCIENT piece of junk, belongs in a museum"],
+            ["The boss seemed upset", "The boss is on an ABSOLUTE RAMPAGE, worst mood I've EVER seen"],
+            ["I disagree with that take", "That is the WORST take in the history of opinions, absolutely braindead"],
+            ["That was a tough loss", "That was the most DEVASTATING loss in sports history, a complete DISASTER"],
+            ["The parking was tricky", "That parking situation was an absolute NIGHTMARE, worst layout ever designed"],
+        ];
+
+        const kiesReactions = {
+            correct: [
+                "EXACTLY. Finally someone gets it.",
+                "YES! That's the ONLY correct answer.",
+                "Obviously. Anything less would be UNACCEPTABLE.",
+                "Correct. The other option was PATHETICALLY mild.",
+                "That's RIGHT. No room for nuance here."
+            ],
+            wrong: [
+                "Are you KIDDING me right now?!",
+                "That's the WORST answer I've ever seen!",
+                "Absolutely UNACCEPTABLE.",
+                "You picked the MILD option?! Disgusting.",
+                "That was the EASIEST question and you BLEW it!"
+            ],
+            waiting: [
+                "Pick the ABSOLUTE statement...",
+                "There's only ONE right answer here.",
+                "Don't you DARE pick the mild one.",
+                "This should be OBVIOUS.",
+                "Choose wisely... or face my judgment."
+            ]
+        };
+
+        // Create the shared bin on first load if needed
+        async function initLeaderboard() {
+            try {
+                await loadLeaderboard();
+            } catch (error) {
+                console.error('Error initializing leaderboard:', error);
+                // Try to create the bin
+                try {
+                    const response = await fetch('https://api.jsonbin.io/v3/b', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Master-Key': JSONBIN_API_KEY,
+                            'X-Bin-Name': 'absolute-kies-leaderboard',
+                            'X-Bin-Private': 'false'
+                        },
+                        body: JSON.stringify({ leaderboard: [] })
+                    });
+                    await loadLeaderboard();
+                } catch (e) {
+                    console.error('Could not create bin:', e);
+                }
+            }
+        }
+
+        async function loadLeaderboard() {
+            try {
+                const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+                    headers: { 'X-Master-Key': JSONBIN_API_KEY }
+                });
+                const data = await response.json();
+                leaderboard = data.record.leaderboard || [];
+                updateLeaderboardDisplay();
+            } catch (error) {
+                console.error('Error loading leaderboard:', error);
+                leaderboard = [];
+                updateLeaderboardDisplay();
+            }
+        }
+
+        async function saveLeaderboard() {
+            try {
+                await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': JSONBIN_API_KEY
+                    },
+                    body: JSON.stringify({ leaderboard: leaderboard })
+                });
+            } catch (error) {
+                console.error('Error saving leaderboard:', error);
+            }
+        }
+
+        function updateLeaderboardDisplay() {
+            const list = document.getElementById('leaderboardList');
+            list.innerHTML = '';
+            const top5 = leaderboard.slice(0, 5);
+            if (top5.length === 0) {
+                list.innerHTML = '<li style="color:#888">No records yet!</li>';
+                return;
+            }
+            top5.forEach(entry => {
+                const li = document.createElement('li');
+                li.innerHTML = `${entry.name}: <span class="record-score">${entry.score}</span>`;
+                list.appendChild(li);
+            });
+        }
+
+        function checkNewRecord(newScore) {
+            if (newScore === 0) return false;
+            if (leaderboard.length < 5) return true;
+            return newScore > leaderboard[leaderboard.length - 1].score;
+        }
+
+        async function addToLeaderboard(name, newScore) {
+            leaderboard.push({ name, score: newScore, date: Date.now() });
+            leaderboard.sort((a, b) => b.score - a.score);
+            leaderboard = leaderboard.slice(0, 10);
+            await saveLeaderboard();
+            updateLeaderboardDisplay();
+        }
+
+        function drawKeys() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const bounce = Math.sin(frameCount * 0.08) * 3;
+            const x = 100;
+            const y = 110 + bounce;
+
+            // Shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+            ctx.beginPath();
+            ctx.ellipse(x, 210, 70, 15, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // === PIANO KEYS BODY (like the emoji 🎹) ===
+            const keyWidth = 22;
+            const keyHeight = 90;
+            const blackKeyHeight = 55;
+            const totalWidth = keyWidth * 7; // 7 white keys
+            const startX = x - totalWidth / 2;
+
+            // Piano body/frame
+            ctx.fillStyle = '#2a2a2a';
+            ctx.beginPath();
+            ctx.roundRect(startX - 8, y - 50, totalWidth + 16, keyHeight + 20, 8);
+            ctx.fill();
+
+            // Draw 7 white keys
+            for (let i = 0; i < 7; i++) {
+                const kx = startX + i * keyWidth;
+
+                // White key
+                ctx.fillStyle = '#fefefe';
+                ctx.strokeStyle = '#aaa';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.roundRect(kx + 1, y - 45, keyWidth - 2, keyHeight, [0, 0, 4, 4]);
+                ctx.fill();
+                ctx.stroke();
+
+                // Subtle gradient on white keys
+                const keyGrad = ctx.createLinearGradient(kx, y - 45, kx, y - 45 + keyHeight);
+                keyGrad.addColorStop(0, 'rgba(255,255,255,0.3)');
+                keyGrad.addColorStop(0.7, 'rgba(0,0,0,0)');
+                keyGrad.addColorStop(1, 'rgba(0,0,0,0.1)');
+                ctx.fillStyle = keyGrad;
+                ctx.fill();
+            }
+
+            // Draw 5 black keys (pattern: 2, skip, 3)
+            const blackKeyPositions = [0.7, 1.7, 3.7, 4.7, 5.7]; // positions between white keys
+            for (let pos of blackKeyPositions) {
+                const bx = startX + pos * keyWidth - 6;
+
+                // Black key
+                ctx.fillStyle = '#1a1a1a';
+                ctx.beginPath();
+                ctx.roundRect(bx, y - 45, 14, blackKeyHeight, [0, 0, 3, 3]);
+                ctx.fill();
+
+                // Highlight on black key
+                const bkGrad = ctx.createLinearGradient(bx, y - 45, bx + 14, y - 45);
+                bkGrad.addColorStop(0, 'rgba(80,80,80,0.4)');
+                bkGrad.addColorStop(0.5, 'rgba(60,60,60,0.2)');
+                bkGrad.addColorStop(1, 'rgba(0,0,0,0.3)');
+                ctx.fillStyle = bkGrad;
+                ctx.fill();
+            }
+
+            // === CUTE FACE (on the middle white keys area) ===
+            const faceY = y + 15;
+
+            // Rosy cheeks
+            ctx.fillStyle = 'rgba(255, 150, 150, 0.5)';
+            ctx.beginPath();
+            ctx.ellipse(x - 28, faceY + 5, 8, 6, 0, 0, Math.PI * 2);
+            ctx.ellipse(x + 28, faceY + 5, 8, 6, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            if (keysMood === 'angry') {
+                // Angry eyebrows
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 3;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(x - 25, faceY - 18);
+                ctx.lineTo(x - 12, faceY - 12);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(x + 25, faceY - 18);
+                ctx.lineTo(x + 12, faceY - 12);
+                ctx.stroke();
+
+                // Angry eyes
+                ctx.fillStyle = '#222';
+                ctx.beginPath();
+                ctx.ellipse(x - 18, faceY - 5, 6, 7, 0, 0, Math.PI * 2);
+                ctx.ellipse(x + 18, faceY - 5, 6, 7, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Angry open mouth
+                ctx.fillStyle = '#1a0505';
+                ctx.beginPath();
+                ctx.ellipse(x, faceY + 18, 12, 8, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Red angry cheeks
+                ctx.fillStyle = 'rgba(255, 60, 60, 0.6)';
+                ctx.beginPath();
+                ctx.ellipse(x - 28, faceY + 5, 8, 6, 0, 0, Math.PI * 2);
+                ctx.ellipse(x + 28, faceY + 5, 8, 6, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+            } else if (keysMood === 'happy') {
+                // Happy closed eyes (^ ^)
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 3;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.arc(x - 18, faceY - 5, 8, Math.PI * 1.15, Math.PI * 1.85);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(x + 18, faceY - 5, 8, Math.PI * 1.15, Math.PI * 1.85);
+                ctx.stroke();
+
+                // Big smile
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(x, faceY + 12, 14, 0.2, Math.PI - 0.2);
+                ctx.stroke();
+
+                // Sparkles
+                ctx.font = '16px Arial';
+                ctx.fillText('✨', x - 55, faceY - 20);
+                ctx.fillText('✨', x + 42, faceY - 15);
+
+            } else {
+                // === PONDERING POSE (neutral) ===
+                // Eyes looking up-right
+                ctx.fillStyle = '#222';
+                ctx.beginPath();
+                ctx.ellipse(x - 15, faceY - 8, 6, 7, 0, 0, Math.PI * 2);
+                ctx.ellipse(x + 20, faceY - 8, 6, 7, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Eye shine
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(x - 13, faceY - 10, 2, 0, Math.PI * 2);
+                ctx.arc(x + 22, faceY - 10, 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // One raised eyebrow
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 2;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(x + 12, faceY - 18);
+                ctx.quadraticCurveTo(x + 20, faceY - 23, x + 28, faceY - 18);
+                ctx.stroke();
+
+                // Thoughtful smirk
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(x - 5, faceY + 15);
+                ctx.quadraticCurveTo(x + 5, faceY + 19, x + 12, faceY + 13);
+                ctx.stroke();
+
+                // Thinking bubbles
+                ctx.fillStyle = 'rgba(255,255,255,0.9)';
+                ctx.strokeStyle = '#bbb';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.arc(x + 50, faceY - 30, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(x + 60, faceY - 45, 6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(x + 72, faceY - 62, 9, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            }
+
+            // === LITTLE ARMS ===
+            ctx.fillStyle = '#fefefe';
+            ctx.strokeStyle = '#888';
+            ctx.lineWidth = 2;
+
+            if (keysMood === 'neutral') {
+                // Hand on chin pondering
+                // Left arm relaxed
+                ctx.beginPath();
+                ctx.ellipse(x - 75, y + 20, 10, 8, 0.3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                // Right arm up to face
+                ctx.save();
+                ctx.translate(x + 50, y + 5);
+                ctx.rotate(-0.6);
+                ctx.beginPath();
+                ctx.roundRect(-5, -25, 10, 25, 4);
+                ctx.fill();
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.ellipse(0, -30, 9, 7, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
+
+            } else if (keysMood === 'happy') {
+                // Arms up celebrating
+                ctx.save();
+                ctx.translate(x - 70, y);
+                ctx.rotate(-0.6);
+                ctx.beginPath();
+                ctx.roundRect(-5, -22, 10, 22, 4);
+                ctx.fill();
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.ellipse(0, -28, 9, 7, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
+
+                ctx.save();
+                ctx.translate(x + 70, y);
+                ctx.rotate(0.6);
+                ctx.beginPath();
+                ctx.roundRect(-5, -22, 10, 22, 4);
+                ctx.fill();
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.ellipse(0, -28, 9, 7, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
+
+            } else {
+                // Fists at sides (angry)
+                ctx.beginPath();
+                ctx.ellipse(x - 75, y + 20, 11, 9, 0.3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.ellipse(x + 75, y + 20, 11, 9, -0.3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            }
+
+            // === LITTLE FEET ===
+            ctx.fillStyle = '#fefefe';
+            ctx.strokeStyle = '#888';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.ellipse(x - 25, y + 58, 12, 7, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.ellipse(x + 25, y + 58, 12, 7, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            frameCount++;
+        }
+
+        function getRandomQuestion() {
+            const q = questions[Math.floor(Math.random() * questions.length)];
+            const correct = Math.random() < 0.5 ? 0 : 1;
+            return {
+                options: correct === 0 ? [q[1], q[0]] : [q[0], q[1]],
+                correctIndex: correct
+            };
+        }
+
+        function loadQuestion() {
+            currentQuestion = getRandomQuestion();
+            document.getElementById('option1').textContent = currentQuestion.options[0];
+            document.getElementById('option2').textContent = currentQuestion.options[1];
+            document.getElementById('option1').className = 'option-btn';
+            document.getElementById('option2').className = 'option-btn';
+            document.getElementById('option1').disabled = false;
+            document.getElementById('option2').disabled = false;
+
+            keysMood = 'neutral';
+        }
+
+        function handleAnswer(selectedIndex) {
+            if (!gameActive) return;
+
+            const btn1 = document.getElementById('option1');
+            const btn2 = document.getElementById('option2');
+            btn1.disabled = true;
+            btn2.disabled = true;
+
+            if (selectedIndex === currentQuestion.correctIndex) {
+                // Correct!
+                score++;
+                document.getElementById('score').textContent = `Streak: ${score}`;
+
+                if (selectedIndex === 0) {
+                    btn1.classList.add('correct');
+                } else {
+                    btn2.classList.add('correct');
+                }
+
+                keysMood = 'happy';
+
+                setTimeout(loadQuestion, 1500);
+
+            } else {
+                // Wrong!
+                gameActive = false;
+
+                if (selectedIndex === 0) {
+                    btn1.classList.add('wrong');
+                    btn2.classList.add('correct');
+                } else {
+                    btn2.classList.add('wrong');
+                    btn1.classList.add('correct');
+                }
+
+                keysMood = 'angry';
+
+                setTimeout(() => {
+                    document.getElementById('gamePlay').style.display = 'none';
+                    document.getElementById('gameOver').style.display = 'block';
+                    document.getElementById('finalScore').textContent = score;
+
+                    // Check for high score
+                    setTimeout(async () => {
+                        await loadLeaderboard();
+                        if (checkNewRecord(score)) {
+                            document.getElementById('newScoreDisplay').textContent = `${score} streak!`;
+                            document.getElementById('nameModal').style.display = 'block';
+                            document.getElementById('playerName').focus();
+                        }
+                    }, 500);
+                }, 2000);
+            }
+        }
+
+        document.getElementById('option1').addEventListener('click', () => handleAnswer(0));
+        document.getElementById('option2').addEventListener('click', () => handleAnswer(1));
+
+        document.getElementById('submitName').addEventListener('click', async () => {
+            const name = document.getElementById('playerName').value.trim() || 'Anonymous';
+            await addToLeaderboard(name, score);
+            document.getElementById('nameModal').style.display = 'none';
+        });
+
+        document.getElementById('playerName').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') document.getElementById('submitName').click();
+        });
+
+        document.getElementById('restartBtn').addEventListener('click', async () => {
+            score = 0;
+            gameActive = true;
+            document.getElementById('score').textContent = 'Streak: 0';
+            document.getElementById('gamePlay').style.display = 'block';
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('playerName').value = '';
+            await loadLeaderboard();
+            loadQuestion();
+        });
+
+        // Animation loop
+        function animate() {
+            drawKeys();
+            requestAnimationFrame(animate);
+        }
+
+        // Initialize
+        initLeaderboard();
+        loadQuestion();
+        animate();
+    </script>
+</body>
+</html>
